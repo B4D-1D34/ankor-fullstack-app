@@ -1,0 +1,32 @@
+version: "3.3"
+
+services:
+  postgres:
+    container_name: regions-db
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: b4d1d34
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    container_name: regions-api
+    restart: unless-stopped
+    image: regions-api-prod:1.0.0
+    build:
+      context: api
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
+    external: true
