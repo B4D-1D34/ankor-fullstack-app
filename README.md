@@ -4,5 +4,5 @@
 Сервис строится, а затем разворачивается через `docker-compose up` в корневой папке проекта
 
 После того как сервис развернут можно запустить клиент
-<code>{cd client
-npm start}</code>
+<code>cd client</code>
+<code>npm start</code>
