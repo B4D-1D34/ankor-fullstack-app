@@ -2,7 +2,6 @@ import Region from "../models/Region";
 import { Request, Response, NextFunction } from "express";
 
 enum ErrorCodes {
-  NotFound = "404",
   AlreadyExist = "23505",
 }
 
@@ -21,7 +20,7 @@ const basicCallback =
     targetFunction: (
       region: Region,
       id: string
-    ) => Promise<RegionsResponseObject[]>
+    ) => Promise<RegionsResponseObject[] | RegionsResponseObject>
   ) =>
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
@@ -30,7 +29,8 @@ const basicCallback =
     try {
       const region = new Region(path, name);
       const result = await targetFunction(region, id);
-      if (!result.length) {
+
+      if (!Array.isArray(result) && !result) {
         throw new Error(
           "Something is wrong, db is not updated, id may not exist"
         );
@@ -41,13 +41,10 @@ const basicCallback =
       switch (err.code) {
         case ErrorCodes.AlreadyExist:
           errorToThrow.message = "Region already exists";
-          errorToThrow.statusCode = 403;
-          break;
-
-        case ErrorCodes.NotFound:
-          errorToThrow.message = "";
+          errorToThrow.statusCode = 409;
           break;
         default:
+          errorToThrow.message = "Internal server error";
           errorToThrow.statusCode = 500;
       }
 
@@ -56,9 +53,9 @@ const basicCallback =
   };
 
 export default {
-  getRegion: basicCallback((region, id) => region.getRegion(id)),
-  getRegions: basicCallback((region) => region.getRegions()),
+  getRegion: basicCallback((_, id) => Region.getRegion(id)),
+  getRegions: basicCallback(() => Region.getRegions()),
   postRegion: basicCallback((region) => region.createRegion()),
   putRegion: basicCallback((region, id) => region.updateRegion(id)),
-  deleteRegion: basicCallback((region, id) => region.deleteRegion(id)),
+  deleteRegion: basicCallback((_, id) => Region.deleteRegion(id)),
 };

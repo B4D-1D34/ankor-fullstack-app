@@ -11,20 +11,24 @@ class Region {
     this.name = name;
   }
 
-  getRegions(): Promise<RegionsResponseObject[]> {
+  static getRegions(): Promise<
+    RegionsResponseObject[] | RegionsResponseObject
+  > {
     return templateCallback(() =>
       db.query(`SELECT * FROM regions ORDER BY id ASC`)
     );
   }
 
-  getRegion(id: string): Promise<RegionsResponseObject[]> {
+  static getRegion(
+    id: string
+  ): Promise<RegionsResponseObject[] | RegionsResponseObject> {
     return templateCallback(
       (id) => db.query(`SELECT * FROM regions WHERE id=$1`, [id]),
       id
     );
   }
 
-  createRegion(): Promise<RegionsResponseObject[]> {
+  createRegion(): Promise<RegionsResponseObject[] | RegionsResponseObject> {
     return templateCallback(() =>
       db.query(`INSERT INTO regions(path, name) VALUES ($1, $2) RETURNING *`, [
         this.path,
@@ -32,7 +36,9 @@ class Region {
       ])
     );
   }
-  updateRegion(id: string): Promise<RegionsResponseObject[]> {
+  updateRegion(
+    id: string
+  ): Promise<RegionsResponseObject[] | RegionsResponseObject> {
     return templateCallback(
       (id) =>
         db.query(`UPDATE regions SET path=$1,name=$2 WHERE id=$3 RETURNING *`, [
@@ -44,7 +50,9 @@ class Region {
     );
   }
 
-  deleteRegion(id: string): Promise<RegionsResponseObject[]> {
+  static deleteRegion(
+    id: string
+  ): Promise<RegionsResponseObject[] | RegionsResponseObject> {
     return templateCallback(
       (id) => db.query(`DELETE FROM regions WHERE id=$1 RETURNING *`, [id]),
       id
@@ -55,10 +63,10 @@ class Region {
 const templateCallback = async function (
   targetFunction: (id?: string) => Promise<QueryResult<any>>,
   id = ""
-): Promise<RegionsResponseObject[]> {
+): Promise<RegionsResponseObject[] | RegionsResponseObject> {
   try {
     const { rows } = await targetFunction(id);
-    return rows;
+    return rows.length < 2 ? rows[0] : rows;
   } catch (err) {
     throw err;
   }
